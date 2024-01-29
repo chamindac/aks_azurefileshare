@@ -1,3 +1,7 @@
+data "http" "mytfip" {
+  url = "https://api.ipify.org" # http://ipv4.icanhazip.com
+}
+
 # vnet
 resource "azurerm_virtual_network" "env_vnet" {
   name                = "${var.PREFIX}-${var.PROJECT}-${var.ENVNAME}-vnet"
