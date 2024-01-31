@@ -103,7 +103,7 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: azurefile-csi-premium # Builtin storage class
+  storageClassName: azurefile-csi # azurefile-csi-premium # Builtin storage class
   csi:
     driver: file.csi.azure.com
     volumeHandle: fsdemo-storage-pv  # make sure this volumeid is unique for every identical share in the cluster
