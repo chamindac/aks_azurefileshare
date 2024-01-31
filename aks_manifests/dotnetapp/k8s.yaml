@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fsdemo-linux
+  namespace: fsdemo
+  labels:
+    app: fsdemo-linux
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 25%
+  minReadySeconds: 30
+  selector:
+    matchLabels:
+      service: fsdemo-linux
+  template:
+    metadata:
+      labels:
+        app: fsdemo-linux
+        service: fsdemo-linux
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      priorityClassName: fsdemo-highest-priority-linux
+      #------------------------------------------------------
+      # setting pod DNS policies to enable faster DNS resolution
+      # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+      dnsConfig:
+        options:
+          # use FQDN everywhere 
+          # any cluster local access from pods need full CNAME to resolve 
+          # short names will not resolve to internal cluster domains
+          - name: ndots
+            value: "2"
+          # dns resolver timeout and attempts
+          - name: timeout
+            value: "15"
+          - name: attempts
+            value: "3"
+          # use TCP to resolve DNS instad of using UDP (UDP is lossy and pods need to wait for timeout for lost packets)
+          - name: use-vc
+          # open new socket for retrying
+          - name: single-request-reopen
+      #------------------------------------------------------
+      volumes:
+        # # `name` here must match the name
+        # # specified in the volume mount
+        # - name: demo-configmap-fsdemo-linux-volume
+        #   configMap:
+        #     # `name` here must match the name
+        #     # specified in the ConfigMap's YAML
+        #     name: demo-configmap
+        - name: fsdemo-data-volume
+          persistentVolumeClaim:
+            claimName: fsdemo-storage-pvc # PersistentVolumeClaim name in aks_manifests\prerequisites\k8s.yaml
+      terminationGracePeriodSeconds: 90 # This must be set to a value that is greater than the preStop hook wait time.
+      containers:
+        - name: fsdemo-linux
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep","60"]
+          image: chdemosharedacr.azurecr.io/fsdemo/chfsdemo:1.0
+          imagePullPolicy: Always
+          volumeMounts:
+            # - mountPath: /etc/config
+            #   name: demo-configmap-fsdemo-linux-volume
+            - mountPath: /fsdemo/data
+              name: fsdemo-data-volume
+          env:
+            - name: MEDIA_PATH
+              value: /fsdemo/data
+          resources:
+                limits:
+                  memory: 1Gi # the memory limit equals to the request!
+                  # no cpu limit! this is excluded on purpose
+                requests:
+                  memory: 1Gi
+                  cpu: "500m"

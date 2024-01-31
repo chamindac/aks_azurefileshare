@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "fsdemo": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
