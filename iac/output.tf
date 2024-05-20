@@ -37,3 +37,7 @@ output "app_deploy_dns_zone" {
     )
   )), "*", ""), ".")
 }
+
+output "aks_fileshare_storage_key" {
+  value = azurerm_storage_account.fs.primary_access_key
+}
